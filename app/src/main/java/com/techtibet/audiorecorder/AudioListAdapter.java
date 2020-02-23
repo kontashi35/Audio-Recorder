@@ -73,7 +73,7 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
         @Override
         public boolean onLongClick(View v) {
             notifyDataSetChanged();
-            Snackbar.make(v,"Audio Deleted will come here",Snackbar.LENGTH_LONG).setAction("Undo", new View.OnClickListener() {
+            Snackbar.make(v,"Audio Deleted will come here ",Snackbar.LENGTH_LONG).setAction("Undo", new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
 
