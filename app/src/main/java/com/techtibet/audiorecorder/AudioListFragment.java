@@ -18,11 +18,13 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Objects;
 
 
 /**
@@ -51,6 +53,10 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
     private SeekBar playerSeekbar;
     private Handler seekbarHandler;
     private Runnable updateSeekbar;
+    private ImageButton mPlayPrevBtn;
+    private ImageButton mPLayNextBtn;
+    private File[] AllFiles;
+    private int currentFilePosition;
 
     public AudioListFragment() {
         // Required empty public constructor
@@ -72,6 +78,8 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
         audioList = view.findViewById(R.id.audio_list_view);
 
         playBtn = view.findViewById(R.id.player_play_btn);
+        mPlayPrevBtn = view.findViewById(R.id.play_prev);
+        mPLayNextBtn = view.findViewById(R.id.play_next);
         playerHeader = view.findViewById(R.id.player_header_title);
         playerFilename = view.findViewById(R.id.player_filename);
 
@@ -113,6 +121,47 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
                 }
             }
         });
+        mPlayPrevBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(getActivity(), "current:"+currentFilePosition, Toast.LENGTH_SHORT).show();
+
+                if(isPlaying){
+                    stopAudio();
+                    if(allFiles!=null){
+                        if(currentFilePosition>=0){
+                            fileToPlay=allFiles[currentFilePosition--];
+                            playAudio(fileToPlay);
+                        }else{
+                            fileToPlay=allFiles[0];
+                            playAudio(fileToPlay);
+                        }
+                    }
+
+                }
+            }
+        });
+        mPLayNextBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(isPlaying){
+                    stopAudio();
+                    if(allFiles!=null){
+                        if(currentFilePosition<allFiles.length){
+                            if(currentFilePosition<0){
+                                currentFilePosition=0;
+                            }
+                            fileToPlay=allFiles[currentFilePosition++];
+                            playAudio(fileToPlay);
+                        }else{
+                            currentFilePosition=0;
+                            fileToPlay=allFiles[currentFilePosition];
+                            playAudio(fileToPlay);
+                        }
+                    }
+                }
+            }
+        });
 
         playerSeekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -136,7 +185,9 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
     }
 
     @Override
-    public void onClickListener(File file, int position) {
+    public void onClickListener(File[] allFiles, File file, int position) {
+        this.allFiles=allFiles;
+        this.currentFilePosition=position;
         fileToPlay = file;
         if(isPlaying){
             stopAudio();
@@ -165,7 +216,7 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
 
     private void stopAudio() {
         //Stop The Audio
-        playBtn.setImageDrawable(getActivity().getResources().getDrawable(R.drawable.player_play_btn, null));
+        playBtn.setImageDrawable(Objects.requireNonNull(getActivity()).getResources().getDrawable(R.drawable.player_play_btn, null));
         playerHeader.setText("Stopped");
         isPlaying = false;
         mediaPlayer.stop();

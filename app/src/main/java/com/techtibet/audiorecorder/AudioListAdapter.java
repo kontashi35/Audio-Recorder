@@ -5,9 +5,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.snackbar.Snackbar;
 
 import java.io.File;
 /**
@@ -44,7 +47,7 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
         return allFiles.length;
     }
 
-    public class AudioViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    public class AudioViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
 
         private ImageView list_image;
         private TextView list_title;
@@ -58,17 +61,30 @@ public class AudioListAdapter extends RecyclerView.Adapter<AudioListAdapter.Audi
             list_date = itemView.findViewById(R.id.list_date);
 
             itemView.setOnClickListener(this);
+            itemView.setOnLongClickListener(this);
 
         }
 
         @Override
         public void onClick(View v) {
-            onItemListClick.onClickListener(allFiles[getAdapterPosition()], getAdapterPosition());
+            onItemListClick.onClickListener(allFiles,allFiles[getAdapterPosition()], getAdapterPosition());
+        }
+
+        @Override
+        public boolean onLongClick(View v) {
+            notifyDataSetChanged();
+            Snackbar.make(v,"Audio Deleted will come here",Snackbar.LENGTH_LONG).setAction("Undo", new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                }
+            }).show();
+            return false;
         }
     }
 
     public interface onItemListClick {
-        void onClickListener(File file, int position);
+        void onClickListener(File[] allFiles,File file, int position);
     }
 
 }
