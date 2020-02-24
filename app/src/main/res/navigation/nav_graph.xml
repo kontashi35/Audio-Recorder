@@ -7,6 +7,7 @@
 
     <fragment
         android:id="@+id/recordFragment"
+        android:tag="recordFragment"
         android:name="com.techtibet.audiorecorder.RecordFragment"
         android:label="fragment_record"
         tools:layout="@layout/fragment_record" >

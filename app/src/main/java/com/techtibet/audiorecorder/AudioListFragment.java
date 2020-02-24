@@ -24,6 +24,8 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Objects;
 
 
@@ -57,6 +59,7 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
     private ImageButton mPLayNextBtn;
     private File[] AllFiles;
     private int currentFilePosition;
+    private boolean audioFinished=false;
 
     public AudioListFragment() {
         // Required empty public constructor
@@ -88,6 +91,9 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
         String path = getActivity().getExternalFilesDir("/").getAbsolutePath();
         File directory = new File(path);
         allFiles = directory.listFiles();
+        if(allFiles!=null){
+            Arrays.sort(allFiles);
+        }
 
         audioListAdapter = new AudioListAdapter(allFiles, this);
 
@@ -117,6 +123,9 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
                 } else {
                     if(fileToPlay != null){
                         resumeAudio();
+                    }else{
+                        fileToPlay=allFiles[0];
+                        playAudio(fileToPlay);
                     }
                 }
             }
@@ -124,20 +133,18 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
         mPlayPrevBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getActivity(), "current:"+currentFilePosition, Toast.LENGTH_SHORT).show();
 
                 if(isPlaying){
                     stopAudio();
-                    if(allFiles!=null){
-                        if(currentFilePosition>=0){
-                            fileToPlay=allFiles[currentFilePosition--];
-                            playAudio(fileToPlay);
-                        }else{
-                            fileToPlay=allFiles[0];
-                            playAudio(fileToPlay);
-                        }
+                }
+                if(allFiles!=null){
+                    if(currentFilePosition>0){
+                        fileToPlay=allFiles[--currentFilePosition];
+                        playAudio(fileToPlay);
+                    }else{
+                        fileToPlay=allFiles[0];
+                        playAudio(fileToPlay);
                     }
-
                 }
             }
         });
@@ -146,18 +153,18 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
             public void onClick(View v) {
                 if(isPlaying){
                     stopAudio();
-                    if(allFiles!=null){
-                        if(currentFilePosition<allFiles.length){
-                            if(currentFilePosition<0){
-                                currentFilePosition=0;
-                            }
-                            fileToPlay=allFiles[currentFilePosition++];
-                            playAudio(fileToPlay);
-                        }else{
+                }
+                if(allFiles!=null){
+                    if(currentFilePosition<allFiles.length){
+                        if(currentFilePosition<0){
                             currentFilePosition=0;
-                            fileToPlay=allFiles[currentFilePosition];
-                            playAudio(fileToPlay);
                         }
+                        fileToPlay=allFiles[currentFilePosition++];
+                        playAudio(fileToPlay);
+                    }else{
+                        currentFilePosition=0;
+                        fileToPlay=allFiles[currentFilePosition];
+                        playAudio(fileToPlay);
                     }
                 }
             }
@@ -189,6 +196,7 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
         this.allFiles=allFiles;
         this.currentFilePosition=position;
         fileToPlay = file;
+        audioFinished=false;
         if(isPlaying){
             stopAudio();
             playAudio(fileToPlay);
@@ -205,6 +213,9 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
     }
 
     private void resumeAudio() {
+        if(audioFinished){
+            playAudio(fileToPlay);
+        }
         mediaPlayer.start();
         playBtn.setImageDrawable(getActivity().getResources().getDrawable(R.drawable.player_pause_btn, null));
         isPlaying = true;
@@ -216,7 +227,7 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
 
     private void stopAudio() {
         //Stop The Audio
-        playBtn.setImageDrawable(Objects.requireNonNull(getActivity()).getResources().getDrawable(R.drawable.player_play_btn, null));
+        playBtn.setImageDrawable(getResources().getDrawable(R.drawable.player_play_btn, null));
         playerHeader.setText("Stopped");
         isPlaying = false;
         mediaPlayer.stop();
@@ -224,7 +235,7 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
     }
 
     private void playAudio(File fileToPlay) {
-
+        audioFinished=false;
         mediaPlayer = new MediaPlayer();
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
         try {
@@ -234,7 +245,7 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
         } catch (IOException e) {
             e.printStackTrace();
         }
-        playBtn.setImageDrawable(getActivity().getResources().getDrawable(R.drawable.player_pause_btn, null));
+        playBtn.setImageDrawable(getResources().getDrawable(R.drawable.player_pause_btn, null));
         playerFilename.setText(fileToPlay.getName());
         playerHeader.setText("Playing");
         //Play the audio
@@ -243,6 +254,7 @@ public class AudioListFragment extends Fragment implements AudioListAdapter.onIt
             @Override
             public void onCompletion(MediaPlayer mp) {
                 stopAudio();
+                audioFinished=true;
                 playerHeader.setText("Finished");
             }
         });

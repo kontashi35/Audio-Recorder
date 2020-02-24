@@ -3,8 +3,11 @@ package com.techtibet.audiorecorder;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.media.MediaRecorder;
 import android.os.Bundle;
 
@@ -12,6 +15,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
@@ -20,7 +24,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Chronometer;
+import android.widget.CompoundButton;
 import android.widget.ImageButton;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import java.io.IOException;
@@ -49,6 +55,7 @@ public class RecordFragment extends Fragment implements View.OnClickListener {
     private String recordFile;
 
     private Chronometer timer;
+    private Switch mLangSwitch;
 
     public RecordFragment() {
         // Required empty public constructor
@@ -61,6 +68,17 @@ public class RecordFragment extends Fragment implements View.OnClickListener {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_record, container, false);
     }
+    private void updateViews(String languageCode) {
+        Context context = LocaleHelper.setLocale(getActivity(), languageCode);
+        Resources resources = context.getResources();
+
+
+    }
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(LocaleHelper.onAttach(context));
+    }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
@@ -72,15 +90,44 @@ public class RecordFragment extends Fragment implements View.OnClickListener {
         recordBtn = view.findViewById(R.id.record_btn);
         timer = view.findViewById(R.id.record_timer);
         filenameText = view.findViewById(R.id.record_filename);
+        mLangSwitch=view.findViewById(R.id.lang_switch);
+
 
         /* Setting up on click listener
            - Class must implement 'View.OnClickListener' and override 'onClick' method
          */
         listBtn.setOnClickListener(this);
         recordBtn.setOnClickListener(this);
+        //langulae update
+        String lang=LocaleHelper.getLanguage(getActivity());
+        if(lang.equals("bo")){
+            mLangSwitch.setChecked(true);
+        }
+        mLangSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+
+                if(isChecked){
+                    updateViews("bo");
+                    restartFragment();
+                }else{
+                    updateViews("en");
+                    restartFragment();
+                }
+
+            }
+        });
 
 
     }
+
+    private void restartFragment() {
+        Intent intent = new Intent(getActivity(), MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        getActivity().finish();
+        startActivity(intent);
+    }
+
 
     @Override
     public void onClick(View v) {
@@ -155,11 +202,11 @@ public class RecordFragment extends Fragment implements View.OnClickListener {
         String recordPath = getActivity().getExternalFilesDir("/").getAbsolutePath();
 
         //Get current date and time
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy_MM_dd_hh_mm_ss", Locale.CANADA);
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy_MM_dd_hh_mm", Locale.CANADA);
         Date now = new Date();
 
         //initialize filename variable with date and time at the end to ensure the new file wont overwrite previous file
-        recordFile = "Recording_" + formatter.format(now) + ".3gp";
+        recordFile = getResources().getString(R.string.recording_name) + formatter.format(now) + ".3gp";
 
         filenameText.setText("Recording, File Name : " + recordFile);
 
